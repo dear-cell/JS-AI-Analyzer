@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>代码分析助手</title>
+    <style>
+        body {
+            width: 800px;
+            height: 600px;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            background: #f5f5f5;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background-color: #e8f5e9;
+        }
+
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+            border-bottom: none;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            flex: 1;
+            overflow: auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 聊天相关样式 */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 10px;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            gap: 15px;
+        }
+
+        .current-model {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: none;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin: 8px 0;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .message.user {
+            background-color: #e3f2fd;
+            margin-left: 20%;
+        }
+
+        .message.assistant {
+            background-color: #f5f5f5;
+            margin-right: 20%;
+        }
+
+        .message.error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        /* 设置相关样式 */
+        .settings-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .settings-form > div {
+            margin-bottom: 15px;
+        }
+
+        .api-settings {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        label {
+            display: inline-block;
+            width: 120px;
+            margin-right: 10px;
+        }
+
+        input, select {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 250px;
+        }
+
+        .settings-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 分析结果相关样式 */
+        .results-container {
+            padding: 15px;
+        }
+
+        .results-section {
+            margin-bottom: 20px;
+        }
+
+        .results-section h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .results-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .results-list li {
+            padding: 8px;
+            margin-bottom: 5px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="chat">对话</button>
+            <button class="tab" data-tab="analysis">分析</button>
+            <button class="tab" data-tab="settings">设置</button>
+        </div>
+
+        <!-- 对话面板 -->
+        <div id="chat" class="tab-content active">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <span id="currentModel" class="current-model">当前模型: 未设置</span>
+                    <button id="clearChat" class="clear-button">清除对话</button>
+                </div>
+                <div id="chatHistory" class="chat-history"></div>
+                <div class="input-container">
+                    <textarea id="messageInput" placeholder="输入消息..." rows="3"></textarea>
+                    <button id="sendButton">发送</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分析面板 -->
+        <div id="analysis" class="tab-content">
+            <div class="results-container">
+                <button id="startAnalysis">开始分析</button>
+                <button id="stopAnalysis" style="display: none;">停止分析</button>
+                <div class="results-section">
+                    <h3>发现的路由</h3>
+                    <ul id="routesList" class="results-list"></ul>
+                </div>
+                <div class="results-section">
+                    <h3>潜在漏洞</h3>
+                    <ul id="vulnList" class="results-list"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 设置面板 -->
+        <div id="settings" class="tab-content">
+            <div class="settings-form">
+                <div>
+                    <label for="apiType">API类型：</label>
+                    <select id="apiType">
+                        <option value="local">本地模型</option>
+                        <option value="remote">远程API</option>
+                    </select>
+                </div>
+                
+                <div id="localSettings" class="api-settings">
+                    <div>
+                        <label for="localApiUrl">本地API地址：</label>
+                        <input type="text" id="localApiUrl" value="http://127.0.0.1:11434/api/generate">
+                    </div>
+                    <div>
+                        <label for="localModelName">本地模型名称：</label>
+                        <input type="text" id="localModelName" value="deepseek-r1:8b">
+                    </div>
+                </div>
+
+                <div id="remoteSettings" class="api-settings" style="display: none;">
+                    <div>
+                        <label for="remoteApiUrl">远程API地址：</label>
+                        <input type="text" id="remoteApiUrl" placeholder="输入API地址">
+                    </div>
+                    <div>
+                        <label for="apiKey">API Key：</label>
+                        <input type="password" id="apiKey" placeholder="输入API Key">
+                    </div>
+                    <div>
+                        <label for="apiSecret">API Secret：</label>
+                        <input type="password" id="apiSecret" placeholder="输入API Secret（如果需要）">
+                    </div>
+                    <div>
+                        <button id="fetchModels">获取可用模型</button>
+                        <select id="remoteModelName" style="margin-left: 10px;">
+                            <option value="">选择模型...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-buttons">
+                    <button id="testConnection">测试连接</button>
+                    <button id="saveSettings">保存设置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html> 

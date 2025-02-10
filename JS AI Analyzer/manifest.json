@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "JS AI Analyzer",
+  "version": "1.0",
+  "description": "使用AI分析网站JS文件的Chrome插件 by:炜夜",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:11434/*",
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "devtools_page": "devtools.html"
+} 
